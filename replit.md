@@ -4,6 +4,31 @@
 
 pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
 
+## Verdiq API (Python FastAPI)
+
+A standalone Python FastAPI service for stock research scoring.
+
+- **Location**: `verdiq-api/main.py`
+- **Port**: 8000 (reads `PORT` env var, defaults to 8000)
+- **Workflow**: `Verdiq API` — runs `cd verdiq-api && python main.py`
+- **Runtime**: Python 3.11 + uvicorn
+- **Dependencies**: fastapi, uvicorn[standard], yfinance, pandas, numpy (managed by uv in `.pythonlibs`)
+
+### Endpoints
+
+- `GET /health` — returns `{"status": "ok"}`
+- `GET /score?ticker=TATAMOTORS.NS` — returns Verdiq Score (0–1000) with 5 pillar breakdown and weakest pillar
+
+### Scoring Pillars
+
+| Pillar | Weight | Metrics Used |
+|---|---|---|
+| Financial Health | 25% | ROE, Revenue Growth CAGR |
+| Profitability | 20% | Profit Margin, ROE |
+| Valuation Fairness | 20% | P/E Ratio |
+| Earnings Quality | 20% | Free Cash Flow, Profit Margin |
+| Debt Safety | 15% | D/E Ratio |
+
 ## Stack
 
 - **Monorepo tool**: pnpm workspaces
