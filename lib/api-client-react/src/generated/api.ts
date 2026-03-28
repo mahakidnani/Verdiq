@@ -13,7 +13,12 @@ import type {
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type {
+  ErrorResponse,
+  GetVerdiqScoreParams,
+  HealthStatus,
+  VerdiqScoreResponse,
+} from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
 import type { ErrorType } from "../custom-fetch";
@@ -92,6 +97,101 @@ export function useHealthCheck<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getHealthCheckQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Returns a Verdiq Score (0–1000) and pillar breakdown for a given stock ticker
+ * @summary Get Verdiq Score
+ */
+export const getGetVerdiqScoreUrl = (params: GetVerdiqScoreParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/score?${stringifiedParams}`
+    : `/api/score`;
+};
+
+export const getVerdiqScore = async (
+  params: GetVerdiqScoreParams,
+  options?: RequestInit,
+): Promise<VerdiqScoreResponse> => {
+  return customFetch<VerdiqScoreResponse>(getGetVerdiqScoreUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetVerdiqScoreQueryKey = (params?: GetVerdiqScoreParams) => {
+  return [`/api/score`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetVerdiqScoreQueryOptions = <
+  TData = Awaited<ReturnType<typeof getVerdiqScore>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params: GetVerdiqScoreParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getVerdiqScore>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetVerdiqScoreQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getVerdiqScore>>> = ({
+    signal,
+  }) => getVerdiqScore(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getVerdiqScore>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetVerdiqScoreQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getVerdiqScore>>
+>;
+export type GetVerdiqScoreQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get Verdiq Score
+ */
+
+export function useGetVerdiqScore<
+  TData = Awaited<ReturnType<typeof getVerdiqScore>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params: GetVerdiqScoreParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getVerdiqScore>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetVerdiqScoreQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

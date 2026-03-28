@@ -1,0 +1,11 @@
+packages:
+  "framer-motion": "For fluid layout animations and progress bar reveals"
+  "clsx": "For conditional class merging"
+  "tailwind-merge": "For conditional class merging alongside clsx"
+  "lucide-react": "For UI icons"
+
+images: []
+
+notes:
+  - "Assuming proxy is set up so /api/score calls work perfectly."
+  - "The UI will gracefully handle null raw_metrics fields as returned by the API."

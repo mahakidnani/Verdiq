@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: verdiq
+    description: Verdiq stock scoring
 paths:
   /healthz:
     get:
@@ -24,6 +26,38 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /score:
+    get:
+      operationId: getVerdiqScore
+      tags: [verdiq]
+      summary: Get Verdiq Score
+      description: Returns a Verdiq Score (0–1000) and pillar breakdown for a given stock ticker
+      parameters:
+        - name: ticker
+          in: query
+          required: true
+          description: Stock ticker symbol (e.g. INFY.NS, AAPL)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Verdiq Score result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerdiqScoreResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: Failed to fetch data from Yahoo Finance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +67,97 @@ components:
           type: string
       required:
         - status
-
+    PillarScore:
+      type: object
+      properties:
+        score:
+          type: number
+          description: Pillar score from 0 to 100
+        weight_pct:
+          type: integer
+          description: Weight percentage of this pillar
+        label:
+          type: string
+          description: Human-readable pillar name
+      required:
+        - score
+        - weight_pct
+        - label
+    WeakestPillar:
+      type: object
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        score:
+          type: number
+      required:
+        - key
+        - label
+        - score
+    RawMetrics:
+      type: object
+      properties:
+        roe:
+          type: number
+          nullable: true
+        revenue_growth_cagr_pct:
+          type: number
+          nullable: true
+        profit_margin_pct:
+          type: number
+          nullable: true
+        de_ratio:
+          type: number
+          nullable: true
+        pe_ratio:
+          type: number
+          nullable: true
+        free_cashflow:
+          type: number
+          nullable: true
+    VerdiqScoreResponse:
+      type: object
+      properties:
+        ticker:
+          type: string
+        verdiq_score:
+          type: integer
+          description: Overall score from 0 to 1000
+        pillars:
+          type: object
+          properties:
+            financial_health:
+              $ref: "#/components/schemas/PillarScore"
+            profitability:
+              $ref: "#/components/schemas/PillarScore"
+            valuation_fairness:
+              $ref: "#/components/schemas/PillarScore"
+            earnings_quality:
+              $ref: "#/components/schemas/PillarScore"
+            debt_safety:
+              $ref: "#/components/schemas/PillarScore"
+          required:
+            - financial_health
+            - profitability
+            - valuation_fairness
+            - earnings_quality
+            - debt_safety
+        weakest_pillar:
+          $ref: "#/components/schemas/WeakestPillar"
+        raw_metrics:
+          $ref: "#/components/schemas/RawMetrics"
+      required:
+        - ticker
+        - verdiq_score
+        - pillars
+        - weakest_pillar
+        - raw_metrics
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+        - detail

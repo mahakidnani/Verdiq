@@ -14,3 +14,58 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * Returns a Verdiq Score (0–1000) and pillar breakdown for a given stock ticker
+ * @summary Get Verdiq Score
+ */
+export const GetVerdiqScoreQueryParams = zod.object({
+  ticker: zod.coerce
+    .string()
+    .describe("Stock ticker symbol (e.g. INFY.NS, AAPL)"),
+});
+
+export const GetVerdiqScoreResponse = zod.object({
+  ticker: zod.string(),
+  verdiq_score: zod.number().describe("Overall score from 0 to 1000"),
+  pillars: zod.object({
+    financial_health: zod.object({
+      score: zod.number().describe("Pillar score from 0 to 100"),
+      weight_pct: zod.number().describe("Weight percentage of this pillar"),
+      label: zod.string().describe("Human-readable pillar name"),
+    }),
+    profitability: zod.object({
+      score: zod.number().describe("Pillar score from 0 to 100"),
+      weight_pct: zod.number().describe("Weight percentage of this pillar"),
+      label: zod.string().describe("Human-readable pillar name"),
+    }),
+    valuation_fairness: zod.object({
+      score: zod.number().describe("Pillar score from 0 to 100"),
+      weight_pct: zod.number().describe("Weight percentage of this pillar"),
+      label: zod.string().describe("Human-readable pillar name"),
+    }),
+    earnings_quality: zod.object({
+      score: zod.number().describe("Pillar score from 0 to 100"),
+      weight_pct: zod.number().describe("Weight percentage of this pillar"),
+      label: zod.string().describe("Human-readable pillar name"),
+    }),
+    debt_safety: zod.object({
+      score: zod.number().describe("Pillar score from 0 to 100"),
+      weight_pct: zod.number().describe("Weight percentage of this pillar"),
+      label: zod.string().describe("Human-readable pillar name"),
+    }),
+  }),
+  weakest_pillar: zod.object({
+    key: zod.string(),
+    label: zod.string(),
+    score: zod.number(),
+  }),
+  raw_metrics: zod.object({
+    roe: zod.number().nullish(),
+    revenue_growth_cagr_pct: zod.number().nullish(),
+    profit_margin_pct: zod.number().nullish(),
+    de_ratio: zod.number().nullish(),
+    pe_ratio: zod.number().nullish(),
+    free_cashflow: zod.number().nullish(),
+  }),
+});

@@ -6,4 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./errorResponse";
+export * from "./getVerdiqScoreParams";
 export * from "./healthStatus";
+export * from "./pillarScore";
+export * from "./rawMetrics";
+export * from "./verdiqScoreResponse";
+export * from "./verdiqScoreResponsePillars";
+export * from "./weakestPillar";

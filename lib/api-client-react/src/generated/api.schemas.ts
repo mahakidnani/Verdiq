@@ -8,3 +8,55 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface PillarScore {
+  /** Pillar score from 0 to 100 */
+  score: number;
+  /** Weight percentage of this pillar */
+  weight_pct: number;
+  /** Human-readable pillar name */
+  label: string;
+}
+
+export interface WeakestPillar {
+  key: string;
+  label: string;
+  score: number;
+}
+
+export interface RawMetrics {
+  roe?: number | null;
+  revenue_growth_cagr_pct?: number | null;
+  profit_margin_pct?: number | null;
+  de_ratio?: number | null;
+  pe_ratio?: number | null;
+  free_cashflow?: number | null;
+}
+
+export type VerdiqScoreResponsePillars = {
+  financial_health: PillarScore;
+  profitability: PillarScore;
+  valuation_fairness: PillarScore;
+  earnings_quality: PillarScore;
+  debt_safety: PillarScore;
+};
+
+export interface VerdiqScoreResponse {
+  ticker: string;
+  /** Overall score from 0 to 1000 */
+  verdiq_score: number;
+  pillars: VerdiqScoreResponsePillars;
+  weakest_pillar: WeakestPillar;
+  raw_metrics: RawMetrics;
+}
+
+export interface ErrorResponse {
+  detail: string;
+}
+
+export type GetVerdiqScoreParams = {
+  /**
+   * Stock ticker symbol (e.g. INFY.NS, AAPL)
+   */
+  ticker: string;
+};
