@@ -50,11 +50,25 @@ export interface VerdiqScoreResponse {
   raw_metrics: RawMetrics;
 }
 
+export interface BusinessBreakdownResponse {
+  ticker: string;
+  company_name: string;
+  /** Plain English explanation from Claude covering what the company does, how it makes money, and a key risk */
+  explanation: string;
+}
+
 export interface ErrorResponse {
   detail: string;
 }
 
 export type GetVerdiqScoreParams = {
+  /**
+   * Stock ticker symbol (e.g. INFY.NS, AAPL)
+   */
+  ticker: string;
+};
+
+export type GetBusinessBreakdownParams = {
   /**
    * Stock ticker symbol (e.g. INFY.NS, AAPL)
    */

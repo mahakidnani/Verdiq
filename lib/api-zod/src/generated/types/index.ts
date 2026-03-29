@@ -6,7 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./businessBreakdownResponse";
 export * from "./errorResponse";
+export * from "./getBusinessBreakdownParams";
 export * from "./getVerdiqScoreParams";
 export * from "./healthStatus";
 export * from "./pillarScore";

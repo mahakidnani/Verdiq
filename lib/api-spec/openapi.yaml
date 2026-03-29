@@ -58,6 +58,44 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /breakdown:
+    get:
+      operationId: getBusinessBreakdown
+      tags: [verdiq]
+      summary: Get Business Breakdown
+      description: Returns a plain English explanation of what a company does, how it makes money, and a key risk for beginner investors
+      parameters:
+        - name: ticker
+          in: query
+          required: true
+          description: Stock ticker symbol (e.g. INFY.NS, AAPL)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Business breakdown result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BusinessBreakdownResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Ticker not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: AI generation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -154,6 +192,20 @@ components:
         - pillars
         - weakest_pillar
         - raw_metrics
+    BusinessBreakdownResponse:
+      type: object
+      properties:
+        ticker:
+          type: string
+        company_name:
+          type: string
+        explanation:
+          type: string
+          description: Plain English explanation from Claude covering what the company does, how it makes money, and a key risk
+      required:
+        - ticker
+        - company_name
+        - explanation
     ErrorResponse:
       type: object
       properties:

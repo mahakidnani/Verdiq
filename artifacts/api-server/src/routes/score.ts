@@ -30,4 +30,30 @@ router.get("/score", async (req, res) => {
   }
 });
 
+router.get("/breakdown", async (req, res) => {
+  const { ticker } = req.query;
+
+  if (!ticker || typeof ticker !== "string") {
+    res.status(400).json({ detail: "ticker query parameter is required" });
+    return;
+  }
+
+  try {
+    const upstream = await fetch(
+      `${VERDIQ_API_BASE}/breakdown?ticker=${encodeURIComponent(ticker)}`,
+    );
+    const data = await upstream.json();
+
+    if (!upstream.ok) {
+      res.status(upstream.status).json(data);
+      return;
+    }
+
+    res.status(200).json(data);
+  } catch (err) {
+    req.log.error({ err }, "Failed to reach Verdiq breakdown API");
+    res.status(502).json({ detail: "Failed to reach breakdown service" });
+  }
+});
+
 export default router;

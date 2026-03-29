@@ -69,3 +69,23 @@ export const GetVerdiqScoreResponse = zod.object({
     free_cashflow: zod.number().nullish(),
   }),
 });
+
+/**
+ * Returns a plain English explanation of what a company does, how it makes money, and a key risk for beginner investors
+ * @summary Get Business Breakdown
+ */
+export const GetBusinessBreakdownQueryParams = zod.object({
+  ticker: zod.coerce
+    .string()
+    .describe("Stock ticker symbol (e.g. INFY.NS, AAPL)"),
+});
+
+export const GetBusinessBreakdownResponse = zod.object({
+  ticker: zod.string(),
+  company_name: zod.string(),
+  explanation: zod
+    .string()
+    .describe(
+      "Plain English explanation from Claude covering what the company does, how it makes money, and a key risk",
+    ),
+});

@@ -14,7 +14,9 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  BusinessBreakdownResponse,
   ErrorResponse,
+  GetBusinessBreakdownParams,
   GetVerdiqScoreParams,
   HealthStatus,
   VerdiqScoreResponse,
@@ -192,6 +194,110 @@ export function useGetVerdiqScore<
   },
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetVerdiqScoreQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Returns a plain English explanation of what a company does, how it makes money, and a key risk for beginner investors
+ * @summary Get Business Breakdown
+ */
+export const getGetBusinessBreakdownUrl = (
+  params: GetBusinessBreakdownParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/breakdown?${stringifiedParams}`
+    : `/api/breakdown`;
+};
+
+export const getBusinessBreakdown = async (
+  params: GetBusinessBreakdownParams,
+  options?: RequestInit,
+): Promise<BusinessBreakdownResponse> => {
+  return customFetch<BusinessBreakdownResponse>(
+    getGetBusinessBreakdownUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetBusinessBreakdownQueryKey = (
+  params?: GetBusinessBreakdownParams,
+) => {
+  return [`/api/breakdown`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetBusinessBreakdownQueryOptions = <
+  TData = Awaited<ReturnType<typeof getBusinessBreakdown>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params: GetBusinessBreakdownParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getBusinessBreakdown>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetBusinessBreakdownQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getBusinessBreakdown>>
+  > = ({ signal }) =>
+    getBusinessBreakdown(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getBusinessBreakdown>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetBusinessBreakdownQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getBusinessBreakdown>>
+>;
+export type GetBusinessBreakdownQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get Business Breakdown
+ */
+
+export function useGetBusinessBreakdown<
+  TData = Awaited<ReturnType<typeof getBusinessBreakdown>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params: GetBusinessBreakdownParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getBusinessBreakdown>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetBusinessBreakdownQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

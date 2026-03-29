@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, TrendingUp, AlertCircle, BarChart3, Activity } from "lucide-react";
-import { useGetVerdiqScore } from "@workspace/api-client-react";
+import { Search, TrendingUp, AlertCircle, BarChart3, Activity, BookOpen, Loader2 } from "lucide-react";
+import { useGetVerdiqScore, useGetBusinessBreakdown } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { cn, formatMetricValue, getMetricLabel } from "@/lib/utils";
 
-// --- Score Styling Utilities ---
 function getScoreStyling(score: number) {
   if (score <= 300) return { label: "Weak", color: "text-rose-600", bg: "bg-rose-50", bar: "bg-rose-500", border: "border-rose-200" };
   if (score <= 500) return { label: "Below Average", color: "text-orange-600", bg: "bg-orange-50", bar: "bg-orange-500", border: "border-orange-200" };
@@ -25,7 +24,6 @@ function getPillarStyling(score: number) {
   return { color: "text-teal-600", bar: "bg-teal-500" };
 }
 
-// --- Main Page Component ---
 export default function Home() {
   const [inputValue, setInputValue] = useState("");
   const [submittedTicker, setSubmittedTicker] = useState("");
@@ -33,6 +31,15 @@ export default function Home() {
   const { data, isLoading, error } = useGetVerdiqScore(
     { ticker: submittedTicker },
     { query: { enabled: !!submittedTicker, retry: false } }
+  );
+
+  const {
+    data: breakdownData,
+    isLoading: breakdownLoading,
+    error: breakdownError,
+  } = useGetBusinessBreakdown(
+    { ticker: submittedTicker },
+    { query: { enabled: !!submittedTicker && !!data, retry: false } }
   );
 
   const handleSearch = (e?: React.FormEvent) => {
@@ -43,33 +50,31 @@ export default function Home() {
     }
   };
 
-  // Generate Verdict Paragraph
   const generateVerdict = () => {
     if (!data) return null;
     const style = getScoreStyling(data.verdiq_score);
     const pillars = Object.values(data.pillars);
     const strongest = pillars.reduce((prev, current) => (prev.score > current.score) ? prev : current);
-    
+
     return (
-      <p className="text-muted-foreground leading-relaxed">
-        With an overall score of <strong className={cn("font-semibold", style.color)}>{data.verdiq_score}</strong>, 
-        <strong className="text-foreground"> {data.ticker}</strong> is rated as <strong className={cn("font-semibold", style.color)}>{style.label.toLowerCase()}</strong>. 
-        Its strongest area is <strong className="text-foreground">{strongest.label}</strong> ({strongest.score}/100), 
-        while it struggles most with <strong className="text-foreground">{data.weakest_pillar.label}</strong> ({data.weakest_pillar.score}/100).
+      <p className="text-muted-foreground leading-relaxed text-sm">
+        With an overall score of <strong className={cn("font-semibold", style.color)}>{data.verdiq_score}</strong>,{" "}
+        <strong className="text-foreground">{data.ticker}</strong> is rated as{" "}
+        <strong className={cn("font-semibold", style.color)}>{style.label.toLowerCase()}</strong>.{" "}
+        Its strongest area is <strong className="text-foreground">{strongest.label}</strong> ({strongest.score}/100), while it struggles most with{" "}
+        <strong className="text-foreground">{data.weakest_pillar.label}</strong> ({data.weakest_pillar.score}/100).
       </p>
     );
   };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col relative overflow-hidden">
-      {/* Decorative abstract background blobs */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-5xl h-full pointer-events-none overflow-hidden -z-10">
         <div className="absolute top-[-10%] right-[-5%] w-[40rem] h-[40rem] rounded-full bg-blue-100/40 blur-3xl" />
         <div className="absolute top-[20%] left-[-10%] w-[30rem] h-[30rem] rounded-full bg-teal-50/40 blur-3xl" />
       </div>
 
-      {/* Header / Hero Transition */}
-      <motion.div 
+      <motion.div
         layout
         className={cn(
           "w-full px-6 flex flex-col items-center",
@@ -83,7 +88,7 @@ export default function Home() {
               <h1 className="text-3xl md:text-4xl font-extrabold font-display tracking-tight">Verdiq</h1>
             </motion.div>
             {!submittedTicker && (
-              <motion.p 
+              <motion.p
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
@@ -97,7 +102,7 @@ export default function Home() {
           <motion.div layout className={cn("w-full", submittedTicker ? "max-w-md" : "max-w-xl mt-8")}>
             <form onSubmit={handleSearch} className="relative flex items-center shadow-lg shadow-primary/5 rounded-2xl">
               <Search className="absolute left-4 w-5 h-5 text-muted-foreground" />
-              <Input 
+              <Input
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder="Enter stock ticker (e.g., AAPL, INFY.NS)..."
@@ -116,10 +121,9 @@ export default function Home() {
         </motion.div>
       </motion.div>
 
-      {/* Main Content Area */}
       <AnimatePresence mode="wait">
         {isLoading && (
-          <motion.div 
+          <motion.div
             key="loading"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -135,7 +139,7 @@ export default function Home() {
         )}
 
         {error && !isLoading && (
-          <motion.div 
+          <motion.div
             key="error"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -152,31 +156,26 @@ export default function Home() {
         )}
 
         {data && !isLoading && !error && (
-          <motion.div 
+          <motion.div
             key="results"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, staggerChildren: 0.1 }}
+            transition={{ duration: 0.4 }}
             className="w-full max-w-4xl mx-auto px-6 pb-24 space-y-6"
           >
-            
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-              
-              {/* Left Column: Overall Score & Verdict */}
+              {/* Score Card */}
               <Card className="md:col-span-5 p-8 flex flex-col items-center text-center justify-center overflow-hidden relative shadow-lg shadow-black/5">
-                {/* Decorative background for the score card */}
                 <div className={cn("absolute inset-0 opacity-[0.03] pointer-events-none transition-colors duration-500", getScoreStyling(data.verdiq_score).bar)} />
-                
                 <p className="text-sm font-semibold tracking-wider uppercase text-muted-foreground mb-6">Verdiq Score</p>
-                
                 <div className="relative">
                   <svg className="w-48 h-48 transform -rotate-90">
                     <circle cx="96" cy="96" r="88" className="stroke-muted/30" strokeWidth="12" fill="none" />
-                    <motion.circle 
-                      cx="96" cy="96" r="88" 
-                      className={cn("transition-all duration-1000 ease-out", getScoreStyling(data.verdiq_score).color.replace('text-', 'stroke-'))}
-                      strokeWidth="12" 
-                      fill="none" 
+                    <motion.circle
+                      cx="96" cy="96" r="88"
+                      className={cn("transition-all duration-1000 ease-out", getScoreStyling(data.verdiq_score).color.replace("text-", "stroke-"))}
+                      strokeWidth="12"
+                      fill="none"
                       strokeDasharray="553"
                       initial={{ strokeDashoffset: 553 }}
                       animate={{ strokeDashoffset: 553 - (553 * (data.verdiq_score / 1000)) }}
@@ -184,34 +183,28 @@ export default function Home() {
                     />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-5xl font-extrabold font-display text-foreground tracking-tighter">
-                      {data.verdiq_score}
-                    </span>
+                    <span className="text-5xl font-extrabold font-display text-foreground tracking-tighter">{data.verdiq_score}</span>
                     <span className="text-sm text-muted-foreground mt-1">/ 1000</span>
                   </div>
                 </div>
-
                 <div className={cn("mt-6 px-4 py-1.5 rounded-full text-sm font-bold tracking-wide uppercase border", getScoreStyling(data.verdiq_score).bg, getScoreStyling(data.verdiq_score).color, getScoreStyling(data.verdiq_score).border)}>
                   {getScoreStyling(data.verdiq_score).label}
                 </div>
-
                 <div className="mt-8 text-left bg-slate-50 rounded-2xl p-5 border border-slate-100">
                   {generateVerdict()}
                 </div>
               </Card>
 
-              {/* Right Column: Pillar Breakdown */}
+              {/* Pillar Analysis */}
               <Card className="md:col-span-7 p-8 shadow-md shadow-black/5">
                 <div className="flex items-center gap-2 mb-8">
                   <BarChart3 className="w-5 h-5 text-primary" />
                   <h3 className="text-xl font-bold font-display">Pillar Analysis</h3>
                 </div>
-                
                 <div className="space-y-6">
                   {Object.entries(data.pillars).map(([key, pillar], index) => {
                     const styling = getPillarStyling(pillar.score);
                     const isWeakest = data.weakest_pillar.key === key;
-                    
                     return (
                       <div key={key} className="space-y-2">
                         <div className="flex justify-between items-end">
@@ -226,7 +219,7 @@ export default function Home() {
                           <span className="font-bold font-display text-lg">{pillar.score}<span className="text-xs text-muted-foreground font-sans ml-1">/100</span></span>
                         </div>
                         <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
-                          <motion.div 
+                          <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${pillar.score}%` }}
                             transition={{ duration: 0.8, delay: 0.1 + (index * 0.1), ease: "easeOut" }}
@@ -240,7 +233,54 @@ export default function Home() {
               </Card>
             </div>
 
-            {/* Bottom Row: Raw Metrics Grid */}
+            {/* Business Breakdown Card */}
+            <Card className="p-8 shadow-md shadow-black/5">
+              <div className="flex items-center gap-2 mb-6">
+                <BookOpen className="w-5 h-5 text-primary" />
+                <h3 className="text-xl font-bold font-display">What does this company do?</h3>
+              </div>
+
+              {breakdownLoading && (
+                <div className="flex items-center gap-3 text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                  <span className="text-sm">Generating plain English summary...</span>
+                </div>
+              )}
+
+              {breakdownError && !breakdownLoading && (
+                <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200">
+                  <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                  <p className="text-sm text-amber-800">
+                    Couldn't generate a business summary for this ticker. It may not have enough public data.
+                  </p>
+                </div>
+              )}
+
+              {breakdownData && !breakdownLoading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="space-y-4"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold tracking-wider uppercase text-muted-foreground">
+                      {breakdownData.company_name}
+                    </span>
+                    <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
+                    <span className="text-xs text-muted-foreground">{breakdownData.ticker}</span>
+                  </div>
+                  <p className="text-foreground leading-relaxed text-[15px]">
+                    {breakdownData.explanation}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground/60 italic">
+                    Summary generated by AI · Not financial advice
+                  </p>
+                </motion.div>
+              )}
+            </Card>
+
+            {/* Raw Metrics */}
             <Card className="p-8 shadow-md shadow-black/5">
               <div className="flex items-center gap-2 mb-8">
                 <TrendingUp className="w-5 h-5 text-primary" />
@@ -249,17 +289,12 @@ export default function Home() {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
                 {Object.entries(data.raw_metrics).map(([key, value]) => (
                   <div key={key} className="bg-slate-50 border border-slate-100 rounded-2xl p-5 hover:bg-white hover:border-slate-200 hover:shadow-sm transition-all duration-300">
-                    <p className="text-sm font-medium text-muted-foreground mb-2">
-                      {getMetricLabel(key)}
-                    </p>
-                    <p className="text-2xl font-bold font-display text-foreground">
-                      {formatMetricValue(key, value)}
-                    </p>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">{getMetricLabel(key)}</p>
+                    <p className="text-2xl font-bold font-display text-foreground">{formatMetricValue(key, value)}</p>
                   </div>
                 ))}
               </div>
             </Card>
-
           </motion.div>
         )}
       </AnimatePresence>
