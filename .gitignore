@@ -44,6 +44,29 @@ Thumbs.db
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
-# Replit
+# Replit internal config
 .cache/
 .local/
+.replit
+.replitignore
+replit.nix
+.replit-artifact/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+.Python
+.pythonlibs/
+.uv/
+
+# Logs
+*.log
